@@ -115,9 +115,9 @@ var ckoHelper = {
         var keys = {};
         var str = this.getValue('ckoMode').value == 'live' ? 'Live' : 'Sandbox';
 
-        keys.publicKey = this.getValue('cko' + str + 'PublicKey').value;
-        keys.secretKey = this.getValue('cko' +  str + 'SecretKey').value;
-        keys.privateSharedKey = this.getValue('cko' +  str + 'PrivateSharedKey').value;
+        keys.publicKey = this.getValue('cko' + str + 'PublicKey');
+        keys.secretKey = this.getValue('cko' +  str + 'SecretKey');
+        keys.privateSharedKey = this.getValue('cko' +  str + 'PrivateSharedKey');
 
         return keys;
     },
