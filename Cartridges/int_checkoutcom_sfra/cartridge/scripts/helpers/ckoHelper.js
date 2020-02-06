@@ -16,7 +16,7 @@ var ckoCurrencyConfig = require('~/cartridge/scripts/config/ckoCurrencyConfig');
 /*
 * Utility functions for my cartridge integration.
 */
-var ckoHelper = {  
+var ckoHelper = {
     /*
      * get the required value for each mode
      */
@@ -28,52 +28,52 @@ var ckoHelper = {
             return liveValue;
         }
     },
-    
+
     /*
      * get user language
      */
-    getLanguage: function () {        
+    getLanguage: function () {
         return request.locale.replace('_', '-');
     },
-    
+
     /*
      * get Site Name
      */
-    getSiteName: function () {        
+    getSiteName: function () {
         return dw.system.Site.getCurrent().name;
     },
-    
+
     /*
      * get site Hostname
      */
-    getSiteHostName: function () {        
+    getSiteHostName: function () {
         return dw.system.Site.getCurrent().httpHostName;
     },
-    
+
     /*
      * Check if the gateway response is valid.
      */
     isValidResponse: function () {
         var requestKey = request.httpHeaders.get("authorization");
         var privateSharedKey = this.getAccountKeys().privateSharedKey;
-        
+
         return requestKey == privateSharedKey
     },
-    
+
     /*
      * get value from custom preferences
      */
     getValue: function (field) {
         return dw.system.Site.getCurrent().getCustomPreferenceValue(field);
     },
-    
+
     /*
      * Handles string translation with language resource files.
      */
     _: function (strValue, strFile) {
         return Resource.msg(strValue, strFile, null);
     },
-    
+
     /*
      * Write gateway information to the website's custom log files.
      */
@@ -88,7 +88,7 @@ var ckoHelper = {
             }
         }
     },
-    
+
     /*
      * return order id
      */
@@ -97,17 +97,17 @@ var ckoHelper = {
         if (orderId === null) {
             orderId = session.privacy.ckoOrderId;
         }
-        
+
         return orderId;
     },
-    
+
     /*
      * cartridge metadata.
      */
     getCartridgeMeta: function () {
         return this.getValue("ckoUserAgent") + ' ' + this.getValue("ckoVersion");
     },
-    
+
     /*
      * get Account API Keys
      */
@@ -115,13 +115,13 @@ var ckoHelper = {
         var keys = {};
         var str = this.getValue('ckoMode').value == 'live' ? 'Live' : 'Sandbox';
 
-        keys.publicKey = this.getValue('cko' + str + 'PublicKey').value;
-        keys.secretKey = this.getValue('cko' +  str + 'SecretKey').value;
-        keys.privateSharedKey = this.getValue('cko' +  str + 'PrivateSharedKey').value;
+        keys.publicKey = this.getValue('cko' + str + 'PublicKey');
+        keys.secretKey = this.getValue('cko' +  str + 'SecretKey');
+        keys.privateSharedKey = this.getValue('cko' +  str + 'PrivateSharedKey');
 
         return keys;
     },
-    
+
     /*
      * Create an HTTP client to handle request to gateway
      */
@@ -129,7 +129,7 @@ var ckoHelper = {
         var method = method || 'POST';
         var responseData = false;
         var serv = ServiceRegistry.get(serviceId);
-        
+
         // Prepare the request URL and data
         if (requestData.hasOwnProperty('chargeId')) {
             var requestUrl = serv.getURL().replace('chargeId', requestData.chargeId);
@@ -139,17 +139,17 @@ var ckoHelper = {
 
         // Set the request method
         serv.setRequestMethod(method);
-        
+
         // Call the service
         var resp = serv.call(requestData);
 
         if (resp.status == 'OK') {
             responseData = resp.object
         }
-        
+
         return responseData;
     },
-    
+
     /*
      * Currency Conversion Ratio
      */
@@ -162,32 +162,32 @@ var ckoHelper = {
             return 100;
         }
     },
-    
+
     /*
      * Format price for cko gateway
      */
     getFormattedPrice: function (price, currency) {
         var ckoFormateBy = this.getCKOFormatedValue(currency);
         var orderTotalFormated = price * ckoFormateBy;
-        
+
         return orderTotalFormated.toFixed();
     },
-    
+
     /**
      * Get the Checkout.com orders.
      */
     getOrders: function () {
         // Prepare the output array
         var data = [];
-    
+
         // Query the orders
         var result  = SystemObjectMgr.querySystemObjects('Order', '', 'creationDate desc');
-        
+
         // Loop through the results
         for each(var item in result) {
             // Get the payment instruments
             var paymentInstruments = item.getPaymentInstruments();
-            
+
             // Loop through the payment instruments
             for each(var instrument in paymentInstruments) {
                 if (this.isCkoItem(instrument.paymentMethod) && !this.containsObject(item, data)) {
@@ -227,7 +227,7 @@ var ckoHelper = {
                 }
             }
         }
-        
+
         return null;
     },
 
@@ -263,7 +263,7 @@ var ckoHelper = {
         for each(var item in result) {
             // Get the payment instruments
             var paymentInstruments = item.getPaymentInstruments();
-            
+
             // Loop through the payment instruments
             for each(var instrument in paymentInstruments) {
                 // Get the payment transaction
@@ -278,7 +278,7 @@ var ckoHelper = {
                 }
             }
         }
-        
+
         return null;
     },
 
@@ -290,7 +290,7 @@ var ckoHelper = {
         // load the card and order information
         var order = OrderMgr.getOrder(orderId);
         var currency = order.getCurrencyCode();
-        
+
         return currency;
     },
 
@@ -302,21 +302,21 @@ var ckoHelper = {
         var result = num.replace(/\s/g, "");
         return result;
     },
-    
+
     /*
      * Confirm is a payment is valid from API response code
      */
     paymentSuccess: function (gatewayResponse) {
         return gatewayResponse.response_code == "10000" || gatewayResponse.response_code == '10100' || gatewayResponse.response_code == '10200';
     },
-    
+
     /*
      * Confirm is a payment is valid from API redirect response code
      */
     redirectPaymentSuccess: function (gatewayResponse) {
         return gatewayResponse.actions[0].response_code == "10000" || gatewayResponse.actions[0].response_code == '10100' || gatewayResponse.actions[0].response_code == '10200';
     },
-    
+
     /*
      * Write order information to session for the current shopper.
      */
@@ -329,7 +329,7 @@ var ckoHelper = {
             });
         }
     },
-    
+
     /*
      * Handle a failed payment response
      */
@@ -342,7 +342,7 @@ var ckoHelper = {
         // Send back to the error page
         ISML.renderTemplate('custom/common/response/failed.isml');
     },
-    
+
     /*
      * Rebuild basket contents after a failed payment.
      */
@@ -356,32 +356,32 @@ var ckoHelper = {
         var newGCLI;
         var billingAddress;
         var shippingAddress;
-        
+
         if (order && basket && basket.productLineItems.size() === 0 && basket.giftCertificateLineItems.size() === 0) {
             Transaction.begin();
-            
+
             it = order.productLineItems.iterator();
-            
+
             while (it.hasNext()) {
                 pli = it.next();
                 newPLI = basket.createProductLineItem(pli.productID, basket.defaultShipment);
                 newPLI.setQuantityValue(pli.quantity.value);
             }
-            
+
             gcit = order.giftCertificateLineItems.iterator();
             while (gcit.hasNext()) {
                 gcli = it.next();
                 newGCLI = basket.createGiftCertificateLineItems(gcli.priceValue, gcli.recipientEmail);
-                
+
                 newGCLI.setMessage(gcli.message);
                 newGCLI.setRecipientName(gcli.recipientName);
                 newGCLI.setSenderName(gcli.senderName);
                 newGCLI.setProductListItem(gcli.productListItem);
             }
-            
+
             // Handle email address
             basket.customerEmail = order.customerEmail;
-            
+
             // Handle billing address
             billingAddress = basket.createBillingAddress();
             billingAddress.firstName = order.billingAddress.firstName;
@@ -393,8 +393,8 @@ var ckoHelper = {
             billingAddress.stateCode = order.billingAddress.stateCode;
             billingAddress.countryCode = order.billingAddress.countryCode;
             billingAddress.phone = order.billingAddress.phone;
-            
-            
+
+
             // Handle shipping address
             shippingAddress = basket.defaultShipment.createShippingAddress();
             shippingAddress.firstName = order.defaultShipment.shippingAddress.firstName;
@@ -406,31 +406,31 @@ var ckoHelper = {
             shippingAddress.stateCode = order.defaultShipment.shippingAddress.stateCode;
             shippingAddress.countryCode = order.defaultShipment.shippingAddress.countryCode;
             shippingAddress.phone = order.defaultShipment.shippingAddress.phone;
-            
+
             // Handle shipping method
             basket.defaultShipment.setShippingMethod(order.defaultShipment.getShippingMethod());
-            
+
             // Commit the transaction
             Transaction.commit();
         }
     },
-    
+
     /*
      * return customer object
      */
     getCustomer: function (args) {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
-        
+
         // customer object
         var customer = {
             email               : order.customerEmail,
             name                : order.customerName
         };
-        
+
         return customer;
     },
-    
+
     /*
      * get Basket Quantities
      */
@@ -438,24 +438,24 @@ var ckoHelper = {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
         var quantity = order.getProductQuantityTotal();
-        
-        return quantity; 
+
+        return quantity;
     },
-    
+
     /*
      * get Billing Descriptor Object
      * from custom preferences
      */
     getBillingDescriptorObject : function () {
-        
+
         var billingDescriptor = {
             "name"  : this.getValue('ckoBillingDescriptor1'),
             "city"  : this.getValue('ckoBillingDescriptor2')
         }
-        
+
         return billingDescriptor;
     },
-    
+
     /*
      * get Products Information
      */
@@ -468,7 +468,7 @@ var ckoHelper = {
         // Loop through the itemd
         while (it.hasNext()) {
             var pli = it.next();
-            
+
             // product id
             var product = {
                 "product_id"    : pli.productID,
@@ -476,29 +476,29 @@ var ckoHelper = {
                 "price"         : this.getFormattedPrice(pli.adjustedPrice.value.toFixed(2), this.getCurrency()),
                 "description"   : pli.productName
             }
-            
+
             // push to products array
             products.push(product);
         }
-        
+
         if (this.getShippingValue(args)) {
             products.push(this.getShippingValue(args));
         }
-        
+
         if (this.getTaxObject(args)) {
             products.push(this.getTaxObject(args));
         }
-        
+
         return products;
     },
-    
+
     /*
      * return tax object
      */
     getTaxObject : function (args) {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
-        
+
         // Prepare the tax data
         var tax = {
             "product_id"    : args.OrderNo,
@@ -506,7 +506,7 @@ var ckoHelper = {
             "price"         : this.getFormattedPrice(order.getTotalTax().valueOf().toFixed(2), this.getCurrency()),
             "description"   : "Order Tax"
         }
-        
+
         // Test the order
         if (order.getTotalTax().valueOf() > 0) {
             return tax;
@@ -514,7 +514,7 @@ var ckoHelper = {
             return false;
         }
     },
-        
+
     /*
      * return shipping object
      */
@@ -524,7 +524,7 @@ var ckoHelper = {
 
         // Get shipping address object
         var shipping = order.getDefaultShipment();
-        
+
         // Check if shipping cost is applicable to this order
         if (shipping.getShippingTotalPrice().valueOf() > 0) {
             var shippment = {
@@ -533,13 +533,13 @@ var ckoHelper = {
                 "price"         : this.getFormattedPrice(shipping.adjustedShippingTotalPrice.value.toFixed(2), this.getCurrency()),
                 "description"   : shipping.getShippingMethod().getDisplayName() + " Shipping : " + shipping.getShippingMethod().getDescription()
             }
-            
+
             return shippment;
         } else {
             return false;
         }
     },
-    
+
     /*
      * Return Order Currency Code
      */
@@ -550,7 +550,7 @@ var ckoHelper = {
         // Get shipping address object
         var shipping = order.getDefaultShipment().getShippingMethod();
         var shippingCurrency = shipping.getCurrencyCode();
-        
+
         return shippingCurrency;
     },
 
@@ -570,7 +570,7 @@ var ckoHelper = {
             var pli = it.next();
             products.push(pli.productName);
         }
-        
+
         return products;
     },
 
@@ -580,7 +580,7 @@ var ckoHelper = {
     getProductPrices : function (args) {
         // Load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
-        
+
         // Get the product itemas
         var items = order.productLineItems.iterator();
 
@@ -590,10 +590,10 @@ var ckoHelper = {
             var item = items.next();
             products.push(item.getPriceValue());
         }
-        
+
         return products;
     },
-    
+
     /*
      * get Product IDs
      */
@@ -606,37 +606,37 @@ var ckoHelper = {
             var pli = it.next();
             productIds.push(pli.productID);
         }
-        
+
         return productIds;
     },
-    
+
     /*
      * get Each Product Quantity
      */
     getProductQuantity : function (args) {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
-        
+
         // Prepare the iterator
         var it = order.productLineItems.iterator();
-        
+
         // Loop through the items
         var products_quantites = 0;
         while (it.hasNext()) {
             var pli = it.next();
             products_quantites += pli.quantityValue;
         }
-        
+
         return products_quantites;
     },
-        
+
     /*
      * get Each Product Quantity
      */
     getProductQuantities : function (args) {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
-        
+
         // Prepare the iterator
         var it = order.productLineItems.iterator();
 
@@ -646,7 +646,7 @@ var ckoHelper = {
             var pli = it.next();
             products_quantites.push(pli.quantityValue);
         }
-        
+
         return products_quantites;
     },
 
@@ -657,7 +657,7 @@ var ckoHelper = {
         // load the card and order information
         var order = OrderMgr.getOrder(args.OrderNo);
         var host = order.getRemoteHost()
-        
+
         return host;
     },
 
@@ -668,7 +668,7 @@ var ckoHelper = {
         var amount = this.getFormattedPrice(order.totalGrossPrice.value.toFixed(2), this.getCurrency());
         return amount;
     },
-    
+
     /*
      * return phone object
      */
@@ -678,16 +678,16 @@ var ckoHelper = {
 
         // Get billing address information
         var billingAddress = order.getBillingAddress();
-        
+
         // creating phone object
         var phone = {
             country_code        : null,
             number              : billingAddress.getPhone()
         };
-        
+
         return phone;
     },
-    
+
     /*
      * Return Customer FullName
      */
@@ -698,10 +698,10 @@ var ckoHelper = {
         // Get billing address information
         var billingAddress = order.getBillingAddress();
         var fullname = billingAddress.getFullName();
-        
+
         return fullname;
     },
-    
+
     /*
      * Return Customer FirstName
      */
@@ -712,10 +712,10 @@ var ckoHelper = {
         // Get billing address information
         var billingAddress = order.getBillingAddress();
         var firstname = billingAddress.getFirstName();
-        
+
         return firstname;
     },
-    
+
     /*
      * Return Customer LastName
      */
@@ -726,10 +726,10 @@ var ckoHelper = {
         // Get billing address information
         var billingAddress = order.getBillingAddress();
         var lastname = billingAddress.getLastName();
-        
+
         return lastname;
     },
-        
+
     /*
      * return capture time
      */
@@ -739,27 +739,27 @@ var ckoHelper = {
             var t = new Date();
             var m = parseInt(t.getMinutes()) + parseInt(captureOn);
             t.setMinutes(m);
-            
+
             return t;
         }
-        
+
         return null;
     },
-    
+
     /*
      * Build 3ds object
      */
     get3Ds: function () {
-        
+
         // 3ds object
         var ds = {
             "enabled"               : this.getValue('cko3ds'),
             "attempt_n3d"           : this.getValue('ckoN3ds')
         }
-        
+
         return ds;
     },
-    
+
     /*
      * Build metadata object
      */
@@ -781,10 +781,10 @@ var ckoHelper = {
 
         // Add the payment processor to the metadata
         meta.payment_processor = args.ProcesssorId;
-    
+
         return meta;
     },
-    
+
     /*
      * Build the Billing object
      */
@@ -803,10 +803,10 @@ var ckoHelper = {
             zip                 : billingAddress.getPostalCode(),
             country             : billingAddress.getCountryCode().value
         };
-        
+
         return billingDetails;
     },
-    
+
     /*
      * get Billing Country
      */
@@ -817,10 +817,10 @@ var ckoHelper = {
         // Get billing address information
         var billingAddress = order.getBillingAddress();
         var country = billingAddress.getCountryCode().value
-        
+
         return country;
     },
-    
+
     /*
      * Build the Shipping object
      */
@@ -830,7 +830,7 @@ var ckoHelper = {
 
         // Get shipping address object
         var shippingAddress = order.getDefaultShipment().getShippingAddress();
-        
+
         // creating address object
         var shippingDetails = {
             address_line1       : shippingAddress.getAddress1(),
@@ -840,16 +840,16 @@ var ckoHelper = {
             zip                 : shippingAddress.getPostalCode(),
             country             : shippingAddress.getCountryCode().value
         };
-        
+
         // shipping object
         var shipping = {
             address             : shippingDetails,
             phone               : this.getPhoneObject(args)
         };
-        
+
         return shipping;
     },
-    
+
     /*
      * Return Basket Item object
      */
@@ -871,7 +871,7 @@ var ckoHelper = {
                 "total_amount"      : totalAmount.toString(),
                 "total_tax_amount"  : this.getFormattedPrice(pli.adjustedTax.value, currency)
             }
-            
+
             products_quantites.push(products);
         }
         var shippingTaxRate = basket.defaultShipment.standardShippingLineItem.getTaxRate() * 100 * 100;
@@ -883,14 +883,14 @@ var ckoHelper = {
             "total_amount"      : this.getFormattedPrice(basket.shippingTotalGrossPrice.value, currency),
             "total_tax_amount"  : this.getFormattedPrice(basket.shippingTotalTax.value, currency)
         }
-        
+
         if (basket.shippingTotalPrice.value > 0) {
             products_quantites.push(shipping);
         }
-        
+
         return products_quantites;
     },
-    
+
     /*
      * Return Basket Item object
      */
@@ -900,7 +900,7 @@ var ckoHelper = {
         var order = OrderMgr.getOrder(args.OrderNo);
         var it = order.productLineItems.iterator();
         var products_quantites = [];
-        
+
         // Iterate through the products
         while (it.hasNext()) {
             var pli = it.next();
@@ -916,7 +916,7 @@ var ckoHelper = {
                 "total_amount"      : totalAmount.toString(),
                 "total_tax_amount"  : this.getFormattedPrice(pli.adjustedTax.value, currency)
             }
-            
+
             products_quantites.push(products);
         }
 
@@ -930,14 +930,14 @@ var ckoHelper = {
             "total_amount"      : this.getFormattedPrice(order.shippingTotalGrossPrice.value, currency),
             "total_tax_amount"  : this.getFormattedPrice(order.shippingTotalTax.value, currency)
         }
-        
+
         if (order.shippingTotalPrice.value > 0) {
             products_quantites.push(shipping);
         }
-        
+
         return products_quantites;
     },
-    
+
     /*
      * Return Basket Item CountryCode
      */
@@ -945,7 +945,7 @@ var ckoHelper = {
         var countyCode = basket.defaultShipment.shippingAddress.countryCode.valueOf();
         return countyCode;
     },
-    
+
     /*
      * Return Basket Item CountryCode
      */
@@ -961,12 +961,12 @@ var ckoHelper = {
             city                        : basket.defaultShipment.shippingAddress.city,
             phone                       : basket.defaultShipment.shippingAddress.phone,
             country                     : basket.defaultShipment.shippingAddress.countryCode.valueOf()
-            
+
         }
-        
+
         return address;
     },
-    
+
     /*
      * Return Basket Item CountryCode
      */
@@ -984,7 +984,7 @@ var ckoHelper = {
             phone                       : order.defaultShipment.shippingAddress.phone,
             country                     : order.defaultShipment.shippingAddress.countryCode.valueOf()
         }
-        
+
         return address;
     }
 }
